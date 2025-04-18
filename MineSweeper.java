@@ -1,15 +1,5 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- */
-
-package com.mycompany.minesweeper;
 import java.util.*;
-/**
- *
- * @author qisarah
- */
 public class MineSweeper {
-
     public static void main(String[] args) {
         System.out.println("Welcome to the minesweeper game! Proudly developed by me! Yay!");
         System.out.print("Kindly provide the number of rows: ");
@@ -18,6 +8,7 @@ public class MineSweeper {
         System.out.print("Kindly provide the number of columns: ");
         int cols = scan.nextInt();
         int[][] matrix = new int [rows][cols];
+        boolean[][] visited = new boolean [rows][cols];
         
         for (int i = 0; i < matrix.length; i++) {
             for (int j = 0; j < matrix[i].length; j++) {
@@ -30,33 +21,43 @@ public class MineSweeper {
         System.out.print("Kindly provide the number of mines to be randomly placed in the game. Note that it should be smaller than " + mineRange + " : ");
         int mineNum = scan.nextInt();
         Random rand = new Random();
-//        int ranRow = rand.nextInt(rows-1);
-//        int ranCol = rand.nextInt(cols-1);
         
         //Randomly assign the position for each mine
         int placedMines = 0;
         while (placedMines < mineNum){
-            int ranRow = rand.nextInt(rows-1);
-            int ranCol = rand.nextInt(cols-1);
+            int ranRow = rand.nextInt(rows - 1);
+            int ranCol = rand.nextInt(cols - 1);
             if (matrix[ranRow][ranCol] != -1) {
                 matrix[ranRow][ranCol] = -1;
                 placedMines++;
             }
         }
-        
-        for (int i = 0; i < matrix.length; i++) {
-            for (int j = 0; j < matrix[i].length; j++) {
-                System.out.print(matrix[i][j] + " ");
+        //Numbers in matrix
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                if (matrix[i][j] == -1)continue;
+                int count = 0;
+                for (int x = -1; x <= 1; x++) {
+                    for (int y = -1; y <= 1; y++) {
+                        int ni = i + x;
+                        int nj = j + y;
+                        if (ni >= 0 && ni < rows && nj >= 0 && nj < cols && matrix[ni][nj] == -1) {
+                            count++;
+                        }
+                    }
+                }
+                matrix[i][j] = count;
             }
-            System.out.println();
         }
-        
+
         //Loop here
-        int checkedPos = 0;
+        int freePos = (rows * cols) - mineNum;
+        int openedCount = 0;
         boolean mineExploded = false;
+        //Main Game Loop
         while(!mineExploded) {
             //get user inputs
-            System.out.println("Current situation: ther are still " + freePos + " free positions");
+            System.out.println("Current situation: there are still " + (freePos - openedCount)+ " free positions");
             System.out.println("What row and column would you guess?");
             System.out.print("Provide a row between 1 and " + rows +" :");
             int guessRow = scan.nextInt();
@@ -66,21 +67,59 @@ public class MineSweeper {
             if (matrix[guessRow-1][guessCol-1] == -1) {
                 mineExploded = true;
             }
-        }
+        
         
         System.out.println("Hahaha :) the mine exploded ### !");
-        
-        
-//        else if (guessRow > 1) {
-//            //top
-//            //check if top has a mine
-//        }
-        
+
+    int r = guessRow - 1;
+    int c = guessCol - 1;
+
+
+    if (matrix[r][c] == -1) {
+        mineExploded = true;
+        visited[r][c] = true;
+    } else {
+        openSafe(matrix, visited, r, c);
+        openedCount = countOpened(visited);
     }
-    
-//    static boolean isHasMine(int [][] arr, int r, int c){
-//        return arr[r-1][c-1] == -1;
-//    }
+
+    if (mineExploded) {
+        System.out.println("Hahaha :) the mine exploded ### !");
+    } else {
+        System.out.println("You win!!! You safely uncovered all positions.");
+    }
+
+    System.out.println("Final board:");
+    OpenAllAndPrint(matrix);
+    } 
+}
+
+    static void openSafe(int[][] matrix, boolean[][] visited, int r, int c) {
+        if (r < 0 || r >= matrix.length || c < 0 || c >= matrix[0].length || visited[r][c])
+            return;
+
+        visited[r][c] = true;
+        if (matrix[r][c] == 0) {
+            // recursively reveal neighbors if current cell has no adjacent mines
+            for (int i = -1; i <= 1; i++) {
+                for (int j = -1; j <= 1; j++) {
+                    openSafe(matrix, visited, r + i, c + j);
+                }
+            }
+        }
+    }
+
+    static int countOpened(boolean[][] visited) {
+        int count = 0;
+        for (int i = 0; i < visited.length; i++) {
+            for (int j = 0; j < visited[i].length; j++) {
+                if (visited[i][j]) count++;
+            }
+        }
+        return count;
+    }
+
+
     static void printBoard(int[][] matrix, boolean[][] visited){
         for (int i = 0; i < matrix.length; i++) {
             for (int j = 0; j < matrix[i].length; j++) {
@@ -95,6 +134,18 @@ public class MineSweeper {
                     }
                 }
             System.out.println();
+            }
+        }
+        static void OpenAllAndPrint(int[][] matrix) {
+            for (int i = 0; i < matrix.length; i++) {
+                for (int j = 0; j < matrix[i].length; j++) {
+                    if (matrix[i][j] == -1) {
+                        System.out.print("# ");
+                    } else {
+                        System.out.print(matrix[i][j] + " ");
+                    }
+                }
+                System.out.println();
             }
         }
     }
